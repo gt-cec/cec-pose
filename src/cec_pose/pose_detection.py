@@ -1,4 +1,4 @@
-import hack_registry
+import cec_pose.hack_registry
 from mmpose.apis import (_track_by_iou,
                          convert_keypoint_definition, extract_pose_sequence,
                          inference_pose_lifter_model, inference_topdown,
@@ -7,6 +7,7 @@ from mmpose.structures import (PoseDataSample, merge_data_samples)
 import numpy as np
 import os
 import utils
+import torch
 
 __author__ = "Jack Kolb"
 __copyright__ = "Jack Kolb"
@@ -29,16 +30,16 @@ skeleton_links = [
     ('right_elbow', 'right_wrist')
 ]
 
-class PoseDetection:
+class PoseDetector:
     def __init__(self):
-        print("Initialize pose detector")
+        print("[CEC Pose] Initialize pose detector, ignore the spam.")
         self.det_config = './pose_estimation/models/rtmdet_m_640-8xb32_coco-person.py'
         self.det_checkpoint = 'https://download.openmmlab.com/mmpose/v1/projects/rtmpose/rtmdet_m_8xb32-100e_coco-obj365-person-235e8209.pth'  # Detector checkpoint file path
         self.pose_estimator_config = './pose_estimation/models/rtmpose-m_8xb256-420e_body8-256x192.py'
         self.pose_estimator_checkpoint = 'https://download.openmmlab.com/mmpose/v1/projects/rtmposev1/rtmpose-m_simcc-body7_pt-body7_420e-256x192-e48f03d0_20230504.pth'  # Pose estimator checkpoint file path
         self.pose_lifter_config = './pose_estimation/models/video-pose-lift_tcn-27frm-supv_8xb128-160e_fit3d.py'  # Pose lifter configuration file path
         self.pose_lifter_checkpoint = './pose_estimation/models/best_MPJPE_epoch_98.pth'
-        self.device = 'mps'  # Device to use (e.g., 'cuda' or 'cpu')
+        self.device = 'mps' if torch.backends.mps.is_available() else 'cuda:0' if torch.cuda.is_available() else 'cpu'
         self.det_cat_id = 0  # Category ID for detection (e.g., person)
         self.bbox_thr = 0.5  # Bounding box threshold
         self.tracking_thr = 0.3  # Tracking threshold
@@ -50,7 +51,7 @@ class PoseDetection:
         self.show_interval = 0  # Interval between frames for visualization
         self.pose_estimator = init_model(self.pose_estimator_config, self.pose_estimator_checkpoint, device=self.device.lower())
         self.pose_lifter = init_model(self.pose_lifter_config, self.pose_lifter_checkpoint, device=self.device.lower())
-        print("Completed initializing pose detector")
+        print("[CEC Pose] Completed initializing pose detector")
 
     # This script takes as input a single image, 
     # then outputs the mean depth of the person in the image
