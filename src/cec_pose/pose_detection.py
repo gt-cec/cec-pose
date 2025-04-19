@@ -13,6 +13,12 @@ __author__ = "Jack Kolb"
 __copyright__ = "Jack Kolb"
 __license__ = "MIT"
 
+# for some reason this fails without several safe globals defined
+import builtins
+import mmengine
+
+torch.serialization.add_safe_globals([np.core.multiarray._reconstruct, builtins.getattr, np.core.multiarray.scalar, np.ndarray, np.dtype, mmengine.logging.history_buffer.HistoryBuffer, bytes, np.dtypes.Float32DType, np.dtypes.Int64DType, np.dtypes.Float64DType, np.dtypes.UInt8DType])
+
 keypoint_index = {
     'root': 0, 'right_hip': 1, 'right_knee': 2, 'right_foot': 3,
     'left_hip': 4, 'left_knee': 5, 'left_foot': 6, 'spine': 7,
@@ -33,12 +39,18 @@ skeleton_links = [
 class PoseDetector:
     def __init__(self):
         print("[CEC Pose] Initialize pose detector, ignore the spam.")
-        self.det_config = './pose_estimation/models/rtmdet_m_640-8xb32_coco-person.py'
+        self.det_config = './models/rtmdet_m_640-8xb32_coco-person.py'
         self.det_checkpoint = 'https://download.openmmlab.com/mmpose/v1/projects/rtmpose/rtmdet_m_8xb32-100e_coco-obj365-person-235e8209.pth'  # Detector checkpoint file path
-        self.pose_estimator_config = './pose_estimation/models/rtmpose-m_8xb256-420e_body8-256x192.py'
+        # print directory of the file
+        import os
+        import sys
+        # Get the directory of the current file
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+
+        self.pose_estimator_config = current_dir + '/models/rtmpose-m_8xb256-420e_body8-256x192.py'
         self.pose_estimator_checkpoint = 'https://download.openmmlab.com/mmpose/v1/projects/rtmposev1/rtmpose-m_simcc-body7_pt-body7_420e-256x192-e48f03d0_20230504.pth'  # Pose estimator checkpoint file path
-        self.pose_lifter_config = './pose_estimation/models/video-pose-lift_tcn-27frm-supv_8xb128-160e_fit3d.py'  # Pose lifter configuration file path
-        self.pose_lifter_checkpoint = './pose_estimation/models/best_MPJPE_epoch_98.pth'
+        self.pose_lifter_config = current_dir + '/models/video-pose-lift_tcn-27frm-supv_8xb128-160e_fit3d.py'  # Pose lifter configuration file path
+        self.pose_lifter_checkpoint = current_dir + '/models/best_MPJPE_epoch_98.pth'
         self.device = 'mps' if torch.backends.mps.is_available() else 'cuda:0' if torch.cuda.is_available() else 'cpu'
         self.det_cat_id = 0  # Category ID for detection (e.g., person)
         self.bbox_thr = 0.5  # Bounding box threshold
