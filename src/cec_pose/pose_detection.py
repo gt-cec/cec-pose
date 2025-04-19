@@ -16,8 +16,10 @@ __license__ = "MIT"
 # for some reason this fails without several safe globals defined
 import builtins
 import mmengine
-
-torch.serialization.add_safe_globals([np.core.multiarray._reconstruct, builtins.getattr, np.core.multiarray.scalar, np.ndarray, np.dtype, mmengine.logging.history_buffer.HistoryBuffer, bytes, np.dtypes.Float32DType, np.dtypes.Int64DType, np.dtypes.Float64DType, np.dtypes.UInt8DType])
+try:
+    torch.serialization.add_safe_globals([np.core.multiarray._reconstruct, builtins.getattr, np.core.multiarray.scalar, np.ndarray, np.dtype, mmengine.logging.history_buffer.HistoryBuffer, bytes, np.dtypes.Float32DType, np.dtypes.Int64DType, np.dtypes.Float64DType, np.dtypes.UInt8DType])
+except:
+    pass
 
 keypoint_index = {
     'root': 0, 'right_hip': 1, 'right_knee': 2, 'right_foot': 3,
