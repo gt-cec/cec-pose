@@ -78,8 +78,8 @@ class PoseDetector:
         # estimate pose results for current image
         if isinstance(bounding_boxes, list):
             bounding_boxes = np.array(bounding_boxes)
-        bounding_boxes = bounding_boxes.flatten()
-        pose_est_results = inference_topdown(pose_estimator, robot_rgb, [bounding_boxes])
+        bounding_boxes = [x.flatten() for x in bounding_boxes]
+        pose_est_results = inference_topdown(pose_estimator, robot_rgb, bounding_boxes)
         _track = _track_by_iou
 
         pose_det_dataset_name = pose_estimator.dataset_meta['dataset_name']
